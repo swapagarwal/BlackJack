@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="hello">Hello World, BlackJackActivity!</string>
+    <string name="app_name">BlackJack</string>
+    <string name="help">"Rules of the Game - 
+The basic premise of the game is that you want to have a hand value that is closer to 21 than that of the dealer, without going over 21.
+
+Values of the Cards - 
+
+* An Ace can count as either 1 or 11.
+* The cards from 2 through 9 are valued at their face value.
+* The 10, Jack, Queen, and King are all valued at 10.
+
+The value of a hand is simply the sum of the point counts of each card in the hand. For example, a hand containing (5,7,8) has the value of 20.
+
+Ace will be counted as 1 only if you are going over 21 or there are two Aces in the hand.
+For example, a hand containing (A,7) has the value of 18. A hand containing (A,7,8) has the value of 16. Here Ace is counted as 1.
+
+Button Click - 
+
+	Hit -  Means you want to draw another card.
+	Stand -  Means you stop at the current total.
+	Surrender - You will lose half money you bet in the hand.	
+	
+Enjoy the Game! - Developed by Hisham."
+	
+	
+	</string>
+	
+</resources>
