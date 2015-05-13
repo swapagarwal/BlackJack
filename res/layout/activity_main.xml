@@ -238,6 +238,40 @@
                     android:layout_weight="50"
                     android:text="How to Play" />
             </LinearLayout>
+
+          <LinearLayout
+              android:layout_width="fill_parent"
+              android:layout_height="wrap_content" >
+            <ImageSwitcher
+                android:id="@+id/ivSplitCard1"
+                android:layout_width="60dp"
+                android:layout_height="80dp"
+                android:layout_marginLeft="2dp" />
+
+            <ImageSwitcher
+                android:id="@+id/ivSplitCard2"
+                android:layout_width="60dp"
+                android:layout_height="80dp"
+                android:layout_marginLeft="2dp" />
+
+            <ImageSwitcher
+                android:id="@+id/ivSplitCard3"
+                android:layout_width="60dp"
+                android:layout_height="80dp"
+                android:layout_marginLeft="2dp" />
+
+            <ImageSwitcher
+                android:id="@+id/ivSplitCard4"
+                android:layout_width="60dp"
+                android:layout_height="80dp"
+                android:layout_marginLeft="2dp" />
+
+            <ImageSwitcher
+                android:id="@+id/ivSplitCard5"
+                android:layout_width="60dp"
+                android:layout_height="80dp"
+                android:layout_marginLeft="2dp" />
+          </LinearLayout>
         </LinearLayout>
     </ScrollView>
 
