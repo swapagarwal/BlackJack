@@ -409,6 +409,7 @@ public class MainActivity extends Activity implements OnClickListener,
               sleep(700);
               _money = _money - _bet;
               _bet = _bet * 2;
+              showTextViews();
               btnDoubleDown.setVisibility(View.GONE);
               playerCall();
               calculatePlayerScore();
