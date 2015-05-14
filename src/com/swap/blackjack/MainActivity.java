@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -48,8 +49,7 @@ public class MainActivity extends Activity implements OnClickListener,
   private ImageSwitcher ivDealerCard1, ivDealerCard2, ivDealerCard3, ivDealerCard4,
       ivDealerCard5;
   private ImageSwitcher ivYourCard1, ivYourCard2, ivYourCard3, ivYourCard4, ivYourCard5;
-  private ImageSwitcher ivSplitCard1, ivSplitCard2, ivSplitCard3, ivSplitCard4, ivSplitCard5;
-  private Button btnPlaceBet;
+  private Button btnPlaceBet,btnDoubleDown;
   private Button btnHit, btnStand, btnSurrender;
   private SeekBar sbBetAmount;
 
@@ -63,11 +63,7 @@ public class MainActivity extends Activity implements OnClickListener,
   int _dealerScore = 0, _playerScore = 0;
   int _dealerCardNumber = 0, _playerCardNumber = 0;
   int _randomNumber;
-  int _splitCard;
-  int _splitDealerCard;
-  int _splitScore;
   int _highestScore;
-  boolean splitting;
 
   // To make sure no card comes twice
   ArrayList<Integer> _alCardsTracking = new ArrayList<Integer>();
@@ -98,6 +94,7 @@ public class MainActivity extends Activity implements OnClickListener,
     imageSwitcherStuff();
 
     // Starting stuff
+    btnDoubleDown.setVisibility(View.GONE);
     _money = 500;
     tvMoney.setText(" $ " + _money);
     sbBetAmount.setMax(_money);
@@ -125,12 +122,6 @@ public class MainActivity extends Activity implements OnClickListener,
     ivYourCard3.setFactory(this);
     ivYourCard4.setFactory(this);
     ivYourCard5.setFactory(this);
-
-    ivSplitCard1.setFactory(this);
-    ivSplitCard2.setFactory(this);
-    ivSplitCard3.setFactory(this);
-    ivSplitCard4.setFactory(this);
-    ivSplitCard5.setFactory(this);
 
     ivDealerCard1.setInAnimation(AnimationUtils.loadAnimation(this,
                                                               android.R.anim.slide_in_left));
@@ -210,13 +201,8 @@ public class MainActivity extends Activity implements OnClickListener,
     ivYourCard4.setImageResource(R.drawable.default_blue);
     ivYourCard5.setImageResource(R.drawable.default_blue);
 
-    ivSplitCard1.setVisibility(View.GONE);
-    ivSplitCard2.setVisibility(View.GONE);
-    ivSplitCard3.setVisibility(View.GONE);
-    ivSplitCard4.setVisibility(View.GONE);
-    ivSplitCard5.setVisibility(View.GONE);
-
     btnPlaceBet.setVisibility(View.VISIBLE);
+    btnDoubleDown.setVisibility(View.GONE);
     hidePlayButtons();
     _dealerCardNumber = _playerCardNumber = 0;
     _dealerScore = _playerScore = 0;
@@ -306,12 +292,6 @@ public class MainActivity extends Activity implements OnClickListener,
     ivYourCard4 = (ImageSwitcher) findViewById(R.id.ivYourCard4);
     ivYourCard5 = (ImageSwitcher) findViewById(R.id.ivYourCard5);
 
-    ivSplitCard1 = (ImageSwitcher) findViewById(R.id.ivSplitCard1);
-    ivSplitCard2 = (ImageSwitcher) findViewById(R.id.ivSplitCard2);
-    ivSplitCard3 = (ImageSwitcher) findViewById(R.id.ivSplitCard3);
-    ivSplitCard4 = (ImageSwitcher) findViewById(R.id.ivSplitCard4);
-    ivSplitCard5 = (ImageSwitcher) findViewById(R.id.ivSplitCard5);
-
     btnHit = (Button) findViewById(R.id.btnHit);
     btnStand = (Button) findViewById(R.id.btnStand);
     btnSurrender = (Button) findViewById(R.id.btnSurrender);
@@ -322,6 +302,8 @@ public class MainActivity extends Activity implements OnClickListener,
 
     btnPlaceBet = (Button) findViewById(R.id.btnPlaceBet);
     btnPlaceBet.setOnClickListener(this);
+    btnDoubleDown = (Button) findViewById(R.id.btnDoubleDown);
+    btnDoubleDown.setOnClickListener(this);
     Button btnExit = (Button) findViewById(R.id.btnExit);
     btnExit.setOnClickListener(this);
     Button btnHelp = (Button) findViewById(R.id.btnHelp);
@@ -364,6 +346,11 @@ public class MainActivity extends Activity implements OnClickListener,
           Toast.makeText(MainActivity.this, "Bet Some Money First",
                          Toast.LENGTH_SHORT).show();
         }
+
+        break;
+      case R.id.btnDoubleDown:
+
+        btnDoubleDownClick();
 
         break;
 
@@ -413,6 +400,51 @@ public class MainActivity extends Activity implements OnClickListener,
 
   }
 
+  private void btnDoubleDownClick() {
+    Thread t = new Thread() {
+      public void run() {
+        runOnUiThread(new Runnable() {
+          public void run() {
+            try {
+              sleep(700);
+              _money = _money - _bet;
+              _bet = _bet * 2;
+              btnDoubleDown.setVisibility(View.GONE);
+              playerCall();
+              calculatePlayerScore();
+              // If reached here player has no aces
+              // Aces count as 1
+              if (_playerScore > 21) {
+                for (int i = 0; i < 5; i++) {
+                  if (_playerCardArray[i] == 'A' && _playerScoreCount[i] == 11) {
+                    _playerScoreCount[i] = 1;
+                    Toast.makeText(MainActivity.this,
+                                   "Aces will be count as 1", Toast.LENGTH_LONG)
+                        .show();
+                    break;
+                  }
+                }
+                calculatePlayerScore();
+              }
+
+              // If reached here player has no aces
+              if (_playerScore > 21) {
+                youLose();
+                showTextViews();
+              }else {
+                btnStandClick();
+              }
+              alertBox();
+            } catch (InterruptedException e) {
+              Log.e("Check", "InterruptedException: ", e);
+            }
+          }
+        });
+      }
+    };
+    t.start();
+  }
+
   private void gameStart() {
 
     // Opening 1 Card of Dealer
@@ -425,10 +457,8 @@ public class MainActivity extends Activity implements OnClickListener,
     // Opening 2 Cards of Player
     playerCall();
     calculatePlayerScore();
-
-    //Check for Split
-    if (_playerCardArray[0] == _playerCardArray[1] && _money > _bet) {
-      splitAlertBox();
+    if(_money >= _bet) {
+      btnDoubleDown.setVisibility(View.VISIBLE);
     }
     // Looking for BlackJack
     if (_playerScore == 21) {
@@ -834,6 +864,7 @@ public class MainActivity extends Activity implements OnClickListener,
   }
 
   private void btnHitClick() {
+    btnDoubleDown.setVisibility(View.GONE);
     playerCall();
     calculatePlayerScore();
 
@@ -881,6 +912,7 @@ public class MainActivity extends Activity implements OnClickListener,
   }
 
   public void btnStandClick() {
+    btnDoubleDown.setVisibility(View.GONE);
     // Computer Play here
     do {
       // Opening 1 Card of Dealer
@@ -929,116 +961,12 @@ public class MainActivity extends Activity implements OnClickListener,
     }
   }
 
-  public void splitAlertBox() {
-
-    final Builder alert = new Builder(this);
-    alert.setCancelable(false);
-    Thread t = new Thread() {
-      public void run() {
-
-        runOnUiThread(new Runnable() {
-          public void run() {
-            alert.setMessage("Would you like to split for double your bet?");
-            alert.setPositiveButton("Yes Please",
-                                    new DialogInterface.OnClickListener() {
-
-                                      public void onClick(DialogInterface dialog,
-                                                          int which) {
-                                        SplitClicked();
-                                      }
-                                    });
-            alert.show();
-          }
-        });
-        alert.setNegativeButton("No Thanks", new DialogInterface.OnClickListener() {
-          public void onClick(DialogInterface dialog, int arg1) {
-            dialog.dismiss();
-          }
-        });
-      }
-    };
-    t.start();
-    // Thread ends here
-  }
-
-  private void SplitClicked() {
-    splitting = true;
-    _playerScore = _playerScore - _playerScoreCount[1];
-    tvYourScore.setText("Your Score : " + _playerScore);
-
-    ivSplitCard1.setVisibility(View.VISIBLE);
-    ivSplitCard2.setVisibility(View.VISIBLE);
-    ivSplitCard3.setVisibility(View.VISIBLE);
-    ivSplitCard4.setVisibility(View.VISIBLE);
-    ivSplitCard5.setVisibility(View.VISIBLE);
-
-    _playerCardNumber--;
-    _money = _money - _bet;
-    tvMoney.setText(" $ " + _money);
-    _bet = _bet * 2;
-    tvBet.setText("Bet - $ " + _bet);
-
-    //========================
-
-    ivSplitCard1.setInAnimation(AnimationUtils.loadAnimation(getBaseContext(),
-                                                             android.R.anim.slide_in_left));
-    ivSplitCard1.setOutAnimation(AnimationUtils.loadAnimation(getBaseContext(),
-                                                              android.R.anim.slide_out_right));
-
-    ivSplitCard2.setInAnimation(AnimationUtils.loadAnimation(getBaseContext(),
-                                                             android.R.anim.slide_in_left));
-    ivSplitCard2.setOutAnimation(AnimationUtils.loadAnimation(getBaseContext(),
-                                                              android.R.anim.slide_out_right));
-
-    ivSplitCard3.setInAnimation(AnimationUtils.loadAnimation(getBaseContext(),
-                                                             android.R.anim.slide_in_left));
-    ivSplitCard3.setOutAnimation(AnimationUtils.loadAnimation(getBaseContext(),
-                                                              android.R.anim.slide_out_right));
-
-    ivSplitCard4.setInAnimation(AnimationUtils.loadAnimation(getBaseContext(),
-                                                             android.R.anim.slide_in_left));
-    ivSplitCard4.setOutAnimation(AnimationUtils.loadAnimation(getBaseContext(),
-                                                              android.R.anim.slide_out_right));
-
-    ivSplitCard5.setInAnimation(AnimationUtils.loadAnimation(getBaseContext(),
-                                                             android.R.anim.slide_in_left));
-    ivSplitCard5.setOutAnimation(AnimationUtils.loadAnimation(getBaseContext(),
-                                                              android.R.anim.slide_out_right));
-    ivSplitCard1.setImageResource(R.drawable.default_blue);
-    ivSplitCard2.setImageResource(R.drawable.default_blue);
-    ivSplitCard3.setImageResource(R.drawable.default_blue);
-    ivSplitCard4.setImageResource(R.drawable.default_blue);
-    ivSplitCard5.setImageResource(R.drawable.default_blue);
-
-    Thread t = new Thread() {
-      public void run() {
-
-        try {
-          sleep(100);
-        } catch (InterruptedException e) {
-          e.printStackTrace();
-        }
-      }
-    };
-    t.start();
-
-    ivYourCard2.setImageResource(R.drawable.default_blue);
-    _splitCard = _randomNumber;
-    _splitDealerCard = dealerNumber;
-   _splitScore = _playerScore;
-    cardsCalling(_splitCard, ivSplitCard1);
-  }
-
   public void alertBox() {
 
     final Builder alert = new Builder(this);
     alert.setCancelable(false);
     String message = "Play Again";
     String positive = "Next Hand";
-    if (splitting) {
-      message = "You previously split, continue?";
-      positive = "I am ready";
-    }
     final String finalMessage = message;
     final String finalPositive = positive;
     Thread t = new Thread() {
@@ -1058,36 +986,7 @@ public class MainActivity extends Activity implements OnClickListener,
 
                                       public void onClick(DialogInterface dialog,
                                                           int which) {
-                                        if (splitting) {
-                                          _dealerScore = 0;
-                                          tvYourScore.setText("Your Score : " + _splitScore);
-                                          tvMoney.setText(" $ " + _money);
-                                          tvBet.setText("Bet - $ " + _bet);
-
-                                          splitting = false;
-                                          ivSplitCard1.setVisibility(View.GONE);
-                                          ivSplitCard2.setVisibility(View.GONE);
-                                          ivSplitCard3.setVisibility(View.GONE);
-                                          ivSplitCard4.setVisibility(View.GONE);
-                                          ivSplitCard5.setVisibility(View.GONE);
-
-                                          ivDealerCard1.setImageResource(R.drawable.default_red);
-                                          ivDealerCard2.setImageResource(R.drawable.default_red);
-                                          ivDealerCard3.setImageResource(R.drawable.default_red);
-                                          ivDealerCard4.setImageResource(R.drawable.default_red);
-                                          ivDealerCard5.setImageResource(R.drawable.default_red);
-
-                                          ivYourCard1.setImageResource(R.drawable.default_blue);
-                                          ivYourCard2.setImageResource(R.drawable.default_blue);
-                                          ivYourCard3.setImageResource(R.drawable.default_blue);
-                                          ivYourCard4.setImageResource(R.drawable.default_blue);
-                                          ivYourCard5.setImageResource(R.drawable.default_blue);
-
-                                          _playerCardArray[0] = cardsCalling(_splitCard, ivYourCard1);
-                                          _dealerCardArray[0] = cardsCalling(_splitDealerCard, ivDealerCard1);
-                                          _playerCardNumber = 1;
-                                          _dealerCardNumber = 1;
-                                        }else  {
+                                       {
                                           resetEveryThing();
                                           hidePlayButtons();
                                           // Making some sound here
