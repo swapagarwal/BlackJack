@@ -66,6 +66,7 @@ public class MainActivity extends Activity implements OnClickListener,
   int _splitCard;
   int _splitDealerCard;
   int _splitScore;
+  int _splitBet = 0;
   int _highestScore;
   boolean splitting;
 
@@ -973,9 +974,8 @@ public class MainActivity extends Activity implements OnClickListener,
     ivSplitCard5.setVisibility(View.VISIBLE);
 
     _playerCardNumber--;
-    _money = _money - _bet;
+    _splitBet = _bet;
     tvMoney.setText(" $ " + _money);
-    _bet = _bet * 2;
     tvBet.setText("Bet - $ " + _bet);
 
     //========================
@@ -1061,6 +1061,8 @@ public class MainActivity extends Activity implements OnClickListener,
                                         if (splitting) {
                                           _dealerScore = 0;
                                           tvYourScore.setText("Your Score : " + _splitScore);
+                                          _bet = _splitBet;
+                                          _money = _money - _bet;
                                           tvMoney.setText(" $ " + _money);
                                           tvBet.setText("Bet - $ " + _bet);
 
