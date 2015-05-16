@@ -1059,8 +1059,6 @@ public class MainActivity extends Activity implements OnClickListener,
                                       public void onClick(DialogInterface dialog,
                                                           int which) {
                                         if (splitting) {
-                                          _dealerScore = 0;
-                                          tvYourScore.setText("Your Score : " + _splitScore);
                                           _bet = _splitBet;
                                           _money = _money - _bet;
                                           tvMoney.setText(" $ " + _money);
@@ -1085,10 +1083,22 @@ public class MainActivity extends Activity implements OnClickListener,
                                           ivYourCard4.setImageResource(R.drawable.default_blue);
                                           ivYourCard5.setImageResource(R.drawable.default_blue);
 
-                                          _playerCardArray[0] = cardsCalling(_splitCard, ivYourCard1);
+                                          for (int i = 0; i < 5; i++) {
+                                            _dealerCardArray[i] = '0';
+                                            _dealerScoreCount[i] = 0;
+                                            _playerCardArray[i] = '0';
+                                            _playerScoreCount[i] = 0;
+                                          }
+
                                           _dealerCardArray[0] = cardsCalling(_splitDealerCard, ivDealerCard1);
+                                          _dealerScoreCount[0] = getIntValueFromCard(_dealerCardArray[0]);
+                                          _playerCardArray[0] = cardsCalling(_splitCard, ivYourCard1);
+                                          _playerScoreCount[0] = getIntValueFromCard(_playerCardArray[0]);
                                           _playerCardNumber = 1;
                                           _dealerCardNumber = 1;
+
+                                          calculateDealerScore();
+                                          calculatePlayerScore();
                                         }else  {
                                           resetEveryThing();
                                           hidePlayButtons();
