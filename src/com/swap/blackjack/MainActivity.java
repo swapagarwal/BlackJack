@@ -8,6 +8,7 @@ import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
+import android.util.Log;
 import android.view.Menu;
 import android.view.MenuInflater;
 import android.view.MenuItem;
@@ -69,7 +70,6 @@ public class MainActivity extends Activity implements OnClickListener,
   int _splitScore;
   int _splitBet = 0;
   int _highestScore;
-  boolean splitting;
 
   // To make sure no card comes twice
   ArrayList<Integer> _alCardsTracking = new ArrayList<Integer>();
@@ -100,6 +100,7 @@ public class MainActivity extends Activity implements OnClickListener,
     imageSwitcherStuff();
 
     // Starting stuff
+    btnDoubleDown.setVisibility(View.GONE);
     _money = 500;
     tvMoney.setText(" $ " + _money);
     sbBetAmount.setMax(_money);
@@ -127,12 +128,6 @@ public class MainActivity extends Activity implements OnClickListener,
     ivYourCard3.setFactory(this);
     ivYourCard4.setFactory(this);
     ivYourCard5.setFactory(this);
-
-    ivSplitCard1.setFactory(this);
-    ivSplitCard2.setFactory(this);
-    ivSplitCard3.setFactory(this);
-    ivSplitCard4.setFactory(this);
-    ivSplitCard5.setFactory(this);
 
     ivDealerCard1.setInAnimation(AnimationUtils.loadAnimation(this,
                                                               android.R.anim.slide_in_left));
@@ -212,13 +207,8 @@ public class MainActivity extends Activity implements OnClickListener,
     ivYourCard4.setImageResource(R.drawable.default_blue);
     ivYourCard5.setImageResource(R.drawable.default_blue);
 
-    ivSplitCard1.setVisibility(View.GONE);
-    ivSplitCard2.setVisibility(View.GONE);
-    ivSplitCard3.setVisibility(View.GONE);
-    ivSplitCard4.setVisibility(View.GONE);
-    ivSplitCard5.setVisibility(View.GONE);
-
     btnPlaceBet.setVisibility(View.VISIBLE);
+    btnDoubleDown.setVisibility(View.GONE);
     hidePlayButtons();
     _dealerCardNumber = _playerCardNumber = 0;
     _dealerScore = _playerScore = 0;
@@ -308,12 +298,6 @@ public class MainActivity extends Activity implements OnClickListener,
     ivYourCard4 = (ImageSwitcher) findViewById(R.id.ivYourCard4);
     ivYourCard5 = (ImageSwitcher) findViewById(R.id.ivYourCard5);
 
-    ivSplitCard1 = (ImageSwitcher) findViewById(R.id.ivSplitCard1);
-    ivSplitCard2 = (ImageSwitcher) findViewById(R.id.ivSplitCard2);
-    ivSplitCard3 = (ImageSwitcher) findViewById(R.id.ivSplitCard3);
-    ivSplitCard4 = (ImageSwitcher) findViewById(R.id.ivSplitCard4);
-    ivSplitCard5 = (ImageSwitcher) findViewById(R.id.ivSplitCard5);
-
     btnHit = (Button) findViewById(R.id.btnHit);
     btnStand = (Button) findViewById(R.id.btnStand);
     btnSurrender = (Button) findViewById(R.id.btnSurrender);
@@ -324,6 +308,8 @@ public class MainActivity extends Activity implements OnClickListener,
 
     btnPlaceBet = (Button) findViewById(R.id.btnPlaceBet);
     btnPlaceBet.setOnClickListener(this);
+    btnDoubleDown = (Button) findViewById(R.id.btnDoubleDown);
+    btnDoubleDown.setOnClickListener(this);
     Button btnExit = (Button) findViewById(R.id.btnExit);
     btnExit.setOnClickListener(this);
     Button btnHelp = (Button) findViewById(R.id.btnHelp);
@@ -373,6 +359,11 @@ public class MainActivity extends Activity implements OnClickListener,
           Toast.makeText(MainActivity.this, "Bet Some Money First",
                          Toast.LENGTH_SHORT).show();
         }
+
+        break;
+      case R.id.btnDoubleDown:
+
+        btnDoubleDownClick();
 
         break;
 
@@ -429,6 +420,52 @@ public class MainActivity extends Activity implements OnClickListener,
 
   }
 
+  private void btnDoubleDownClick() {
+    Thread t = new Thread() {
+      public void run() {
+        runOnUiThread(new Runnable() {
+          public void run() {
+            try {
+              sleep(700);
+              _money = _money - _bet;
+              _bet = _bet * 2;
+              showTextViews();
+              btnDoubleDown.setVisibility(View.GONE);
+              playerCall();
+              calculatePlayerScore();
+              // If reached here player has no aces
+              // Aces count as 1
+              if (_playerScore > 21) {
+                for (int i = 0; i < 5; i++) {
+                  if (_playerCardArray[i] == 'A' && _playerScoreCount[i] == 11) {
+                    _playerScoreCount[i] = 1;
+                    Toast.makeText(MainActivity.this,
+                                   "Aces will be count as 1", Toast.LENGTH_LONG)
+                        .show();
+                    break;
+                  }
+                }
+                calculatePlayerScore();
+              }
+
+              // If reached here player has no aces
+              if (_playerScore > 21) {
+                youLose();
+                showTextViews();
+              }else {
+                btnStandClick();
+              }
+              alertBox();
+            } catch (InterruptedException e) {
+              Log.e("Check", "InterruptedException: ", e);
+            }
+          }
+        });
+      }
+    };
+    t.start();
+  }
+
   private void gameStart() {
 
     // Opening 1 Card of Dealer
@@ -441,10 +478,8 @@ public class MainActivity extends Activity implements OnClickListener,
     // Opening 2 Cards of Player
     playerCall();
     calculatePlayerScore();
-
-    //Check for Split
-    if (_playerCardArray[0] == _playerCardArray[1] && _money > _bet) {
-      splitAlertBox();
+    if(_money >= _bet) {
+      btnDoubleDown.setVisibility(View.VISIBLE);
     }
     // Looking for BlackJack
     if (_playerScore == 21) {
@@ -850,6 +885,7 @@ public class MainActivity extends Activity implements OnClickListener,
   }
 
   private void btnHitClick() {
+    btnDoubleDown.setVisibility(View.GONE);
     playerCall();
     calculatePlayerScore();
 
@@ -897,6 +933,7 @@ public class MainActivity extends Activity implements OnClickListener,
   }
 
   public void btnStandClick() {
+    btnDoubleDown.setVisibility(View.GONE);
     // Computer Play here
     do {
       // Opening 1 Card of Dealer
@@ -1050,10 +1087,6 @@ public class MainActivity extends Activity implements OnClickListener,
     alert.setCancelable(false);
     String message = "Play Again";
     String positive = "Next Hand";
-    if (splitting) {
-      message = "You previously split, continue?";
-      positive = "I am ready";
-    }
     final String finalMessage = message;
     final String finalPositive = positive;
     Thread t = new Thread() {
