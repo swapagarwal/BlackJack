@@ -63,6 +63,10 @@ public class MainActivity extends Activity implements OnClickListener,
   int _dealerScore = 0, _playerScore = 0;
   int _dealerCardNumber = 0, _playerCardNumber = 0;
   int _randomNumber;
+  int _splitCard;
+  int _splitDealerCard;
+  int _splitScore;
+  int _splitBet = 0;
   int _highestScore;
 
   // To make sure no card comes twice
@@ -962,6 +966,105 @@ public class MainActivity extends Activity implements OnClickListener,
     }
   }
 
+  public void splitAlertBox() {
+
+    final Builder alert = new Builder(this);
+    alert.setCancelable(false);
+    Thread t = new Thread() {
+      public void run() {
+
+        runOnUiThread(new Runnable() {
+          public void run() {
+            alert.setMessage("Would you like to split for double your bet?");
+            alert.setPositiveButton("Yes Please",
+                                    new DialogInterface.OnClickListener() {
+
+                                      public void onClick(DialogInterface dialog,
+                                                          int which) {
+                                        SplitClicked();
+                                      }
+                                    });
+            alert.show();
+          }
+        });
+        alert.setNegativeButton("No Thanks", new DialogInterface.OnClickListener() {
+          public void onClick(DialogInterface dialog, int arg1) {
+            dialog.dismiss();
+          }
+        });
+      }
+    };
+    t.start();
+    // Thread ends here
+  }
+
+  private void SplitClicked() {
+    splitting = true;
+    _playerScore = _playerScore - _playerScoreCount[1];
+    tvYourScore.setText("Your Score : " + _playerScore);
+
+    ivSplitCard1.setVisibility(View.VISIBLE);
+    ivSplitCard2.setVisibility(View.VISIBLE);
+    ivSplitCard3.setVisibility(View.VISIBLE);
+    ivSplitCard4.setVisibility(View.VISIBLE);
+    ivSplitCard5.setVisibility(View.VISIBLE);
+
+    _playerCardNumber--;
+    _splitBet = _bet;
+    tvMoney.setText(" $ " + _money);
+    tvBet.setText("Bet - $ " + _bet);
+
+    //========================
+
+    ivSplitCard1.setInAnimation(AnimationUtils.loadAnimation(getBaseContext(),
+                                                             android.R.anim.slide_in_left));
+    ivSplitCard1.setOutAnimation(AnimationUtils.loadAnimation(getBaseContext(),
+                                                              android.R.anim.slide_out_right));
+
+    ivSplitCard2.setInAnimation(AnimationUtils.loadAnimation(getBaseContext(),
+                                                             android.R.anim.slide_in_left));
+    ivSplitCard2.setOutAnimation(AnimationUtils.loadAnimation(getBaseContext(),
+                                                              android.R.anim.slide_out_right));
+
+    ivSplitCard3.setInAnimation(AnimationUtils.loadAnimation(getBaseContext(),
+                                                             android.R.anim.slide_in_left));
+    ivSplitCard3.setOutAnimation(AnimationUtils.loadAnimation(getBaseContext(),
+                                                              android.R.anim.slide_out_right));
+
+    ivSplitCard4.setInAnimation(AnimationUtils.loadAnimation(getBaseContext(),
+                                                             android.R.anim.slide_in_left));
+    ivSplitCard4.setOutAnimation(AnimationUtils.loadAnimation(getBaseContext(),
+                                                              android.R.anim.slide_out_right));
+
+    ivSplitCard5.setInAnimation(AnimationUtils.loadAnimation(getBaseContext(),
+                                                             android.R.anim.slide_in_left));
+    ivSplitCard5.setOutAnimation(AnimationUtils.loadAnimation(getBaseContext(),
+                                                              android.R.anim.slide_out_right));
+    ivSplitCard1.setImageResource(R.drawable.default_blue);
+    ivSplitCard2.setImageResource(R.drawable.default_blue);
+    ivSplitCard3.setImageResource(R.drawable.default_blue);
+    ivSplitCard4.setImageResource(R.drawable.default_blue);
+    ivSplitCard5.setImageResource(R.drawable.default_blue);
+
+    Thread t = new Thread() {
+      public void run() {
+
+        try {
+          sleep(100);
+        } catch (InterruptedException e) {
+          e.printStackTrace();
+        }
+      }
+    };
+    t.start();
+
+    ivYourCard2.setImageResource(R.drawable.default_blue);
+    _splitCard = _randomNumber;
+    _splitDealerCard = dealerNumber;
+   _splitScore = _playerScore;
+    cardsCalling(_splitCard, ivSplitCard1);
+  }
+
   public void alertBox() {
 
     final Builder alert = new Builder(this);
@@ -987,7 +1090,48 @@ public class MainActivity extends Activity implements OnClickListener,
 
                                       public void onClick(DialogInterface dialog,
                                                           int which) {
-                                       {
+                                        if (splitting) {
+                                          _bet = _splitBet;
+                                          _money = _money - _bet;
+                                          tvMoney.setText(" $ " + _money);
+                                          tvBet.setText("Bet - $ " + _bet);
+
+                                          splitting = false;
+                                          ivSplitCard1.setVisibility(View.GONE);
+                                          ivSplitCard2.setVisibility(View.GONE);
+                                          ivSplitCard3.setVisibility(View.GONE);
+                                          ivSplitCard4.setVisibility(View.GONE);
+                                          ivSplitCard5.setVisibility(View.GONE);
+
+                                          ivDealerCard1.setImageResource(R.drawable.default_red);
+                                          ivDealerCard2.setImageResource(R.drawable.default_red);
+                                          ivDealerCard3.setImageResource(R.drawable.default_red);
+                                          ivDealerCard4.setImageResource(R.drawable.default_red);
+                                          ivDealerCard5.setImageResource(R.drawable.default_red);
+
+                                          ivYourCard1.setImageResource(R.drawable.default_blue);
+                                          ivYourCard2.setImageResource(R.drawable.default_blue);
+                                          ivYourCard3.setImageResource(R.drawable.default_blue);
+                                          ivYourCard4.setImageResource(R.drawable.default_blue);
+                                          ivYourCard5.setImageResource(R.drawable.default_blue);
+
+                                          for (int i = 0; i < 5; i++) {
+                                            _dealerCardArray[i] = '0';
+                                            _dealerScoreCount[i] = 0;
+                                            _playerCardArray[i] = '0';
+                                            _playerScoreCount[i] = 0;
+                                          }
+
+                                          _dealerCardArray[0] = cardsCalling(_splitDealerCard, ivDealerCard1);
+                                          _dealerScoreCount[0] = getIntValueFromCard(_dealerCardArray[0]);
+                                          _playerCardArray[0] = cardsCalling(_splitCard, ivYourCard1);
+                                          _playerScoreCount[0] = getIntValueFromCard(_playerCardArray[0]);
+                                          _playerCardNumber = 1;
+                                          _dealerCardNumber = 1;
+
+                                          calculateDealerScore();
+                                          calculatePlayerScore();
+                                        }else  {
                                           resetEveryThing();
                                           hidePlayButtons();
                                           // Making some sound here
