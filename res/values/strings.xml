@@ -28,4 +28,9 @@ Enjoy the Game! - Developed by Hisham."
 	
 	</string>
 	
+    <string name = "challengePt1">Hello! I am playing BlackJack by Swapnil Agarwal!
+        My current score is: </string>
+    <string name = "challengePt2"> and my high score is: </string>
+    <string name = "challengePt3">Try to beat it by downloading the app here: https://github.com/swapagarwal/blackjack</string>
+	
 </resources>
